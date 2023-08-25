@@ -7,9 +7,6 @@
 
 main :: ()
 {
-    hash_string_init();
-    defer hash_string_init();
-
     //
     // The funcionality of this module is quite simple, and similar to
     // other Hash_String/String-ID implementations.

@@ -165,34 +165,6 @@ make_hash_string :: inline ($$s : string) -> Hash_String
 
 
 
-hash_string_init :: ()
-{
-    #if ORIGINAL_STRINGS
-    {
-        init_if_needed();
-    }
-}
-
-
-
-hash_string_deinit :: ()
-{
-    #if ORIGINAL_STRINGS 
-    {
-        init_if_needed();
-        table_reset(*hash_to_string_table);
-        node := last_node;
-        while node
-        {
-            previous := node.previous_node;
-            free(node);
-            node = previous;
-        }
-    }
-}
-
-
-
 #if CUSTOM_HASH_STRING_PARSING
 {
     hash_string_parse :: (token : *Token, struct_info : *Type_Info_Struct, value_pointer : *void) -> parsed : bool, next_token : *Token, error : string
@@ -244,6 +216,7 @@ hash_string_deinit :: ()
 {
     #import "Basic";
     #import "Hash_Table";
+    #import "Atomics";
     #import "Compiler";
     #if USE_SHARED_EXCLUSIVE_LOCK
     {
@@ -276,7 +249,7 @@ hash_string_deinit :: ()
         }
     }
 
-    initialized := false;
+    initialized := 0;
     original_string_lock : Lock_Type;
     hash_to_string_table : Table(Hash_String, string, hash_to_32, compare_hash_strings);
     last_node : *String_Data_Node;
@@ -296,21 +269,24 @@ hash_string_deinit :: ()
 
     init_if_needed :: ()
     {
-        assert(context.thread_index == 0);
-        if initialized then return;  
-        defer initialized = true;
-        init(*original_string_lock); 
-        if !#compile_time
+        if initialized > 0 then return;
+        previous := atomic_add(*initialized, 1);
+        if previous == 0
         {
-            for 0..compile_time_hashes_and_strings_count-1
+            init(*original_string_lock); 
+            if !#compile_time
             {
-                hash_and_offset := compile_time_hashes_and_strings[it];
-                the_string : string;
-                the_string.count = hash_and_offset.count;
-                the_string.data = compile_time_string_data.data + hash_and_offset.offset;
-                table_set(*hash_to_string_table, Hash_String.{hash_and_offset.hash}, the_string);
+                for 0..compile_time_hashes_and_strings_count-1
+                {
+                    hash_and_offset := compile_time_hashes_and_strings[it];
+                    the_string : string;
+                    the_string.count = hash_and_offset.count;
+                    the_string.data = compile_time_string_data.data + hash_and_offset.offset;
+                    table_set(*hash_to_string_table, Hash_String.{hash_and_offset.hash}, the_string);
+                }
             }
         }
+        #asm { mfence; }
     }
 
     save_original_string :: (hash_string : Hash_String, $$s : string)

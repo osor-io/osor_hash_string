@@ -8,16 +8,6 @@ This is very common in the database world, asset management or in general in rea
 
 ## How To
 
-If you want to be able to be able to map back your hash to the original string you should start by calling `hash_string_init`. This is tied to the module parameter `ORIGINAL_STRINGS = true`. This will even make strings that were hashed at compile-time available at run-time.
-```
-main :: ()
-{
-    hash_string_init();
-    defer hash_string_init();
-    /*...*/
-}
-```
-
 Creating a `Hash_String` is as easy as calling `make_hash_string`. You can also call this at compile time if you want a constant.
 ```
 name := make_hash_string("Alice");
