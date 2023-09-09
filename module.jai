@@ -134,16 +134,14 @@ hash_to_32 :: inline (using s : Hash_String) -> u32
 
 make_hash_string :: inline ($$s : string) -> Hash_String
 {
-    result : Hash_String = ---;
     #if is_constant(s)
     {
-        HASH :: #run city_hash_64(s);
-        result.hash = HASH;
-        #if ORIGINAL_STRINGS then if #compile_time then save_original_string(result, s);
+        result :: Hash_String.{ hash = #run city_hash_64(s) };
+        #if ORIGINAL_STRINGS then #run save_original_string(result, s);
     }
     else
     {
-        result.hash = city_hash_64(s);
+        result := Hash_String.{ hash = city_hash_64(s) };
         #if ORIGINAL_STRINGS then save_original_string(result, s);
     }
     return result;
@@ -167,6 +165,8 @@ make_hash_string :: inline ($$s : string) -> Hash_String
 
 #if CUSTOM_HASH_STRING_PARSING
 {
+    #import "osor_parser";
+    
     hash_string_parse :: (token : *Token, struct_info : *Type_Info_Struct, value_pointer : *void) -> parsed : bool, next_token : *Token, error : string
     {
         if struct_info == type_info(Hash_String) && token.type == .String
