@@ -362,7 +362,7 @@ make_hash_string :: inline ($$s : string) -> Hash_String
         if node == null || (node.data.count - node.used) < needed_room
         {
             previous := node;
-            node = New(String_Data_Node, allocator = context.default_allocator);
+            node = New(String_Data_Node,, context.default_allocator);
             node.previous_node = previous;
         }
         node = node;
