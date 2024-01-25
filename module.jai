@@ -249,7 +249,7 @@ make_hash_string :: inline ($$s : string) -> Hash_String
         }
     }
 
-    initialized := 0;
+    initialized : u32 = 0;
     original_string_lock : Lock_Type;
     hash_to_string_table : Table(Hash_String, string, hash_to_32, compare_hash_strings);
     last_node : *String_Data_Node;
@@ -269,11 +269,19 @@ make_hash_string :: inline ($$s : string) -> Hash_String
 
     init_if_needed :: ()
     {
-        if initialized > 0 then return;
+        //
+        // @@NOTE: If multiple threads get past the first check, only the
+        // first one that did the atomic add will do the initialization
+        // while the rest just spinlock waiting for the value to show that
+        // initialization has finished.
+        //
+        if initialized == 0xFFFFFFFF then return;
         previous := atomic_add(*initialized, 1);
         if previous == 0
         {
-            init(*original_string_lock); 
+            defer initialized = 0xFFFFFFFF;
+            init(*original_string_lock);
+            with_exclusive_lock(*original_string_lock);
             if !#compile_time
             {
                 for 0..compile_time_hashes_and_strings_count-1
@@ -286,6 +294,7 @@ make_hash_string :: inline ($$s : string) -> Hash_String
                 }
             }
         }
+        else while initialized != 0xFFFFFFFF #asm { pause; }
         #asm { mfence; }
     }
 
