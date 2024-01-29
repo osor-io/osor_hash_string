@@ -134,14 +134,15 @@ hash_to_32 :: inline (using s : Hash_String) -> u32
 
 make_hash_string :: inline ($$s : string) -> Hash_String
 {
+    hash_function :: inline (s : string) -> u64 { return ifx s then city_hash_64(s) else 0; }
     #if is_constant(s)
     {
-        result :: Hash_String.{ hash = #run city_hash_64(s) };
+        result :: Hash_String.{ hash = #run hash_function(s) };
         #if ORIGINAL_STRINGS then #run save_original_string(result, s);
     }
     else
     {
-        result := Hash_String.{ hash = city_hash_64(s) };
+        result := Hash_String.{ hash = hash_function(s) };
         #if ORIGINAL_STRINGS then save_original_string(result, s);
     }
     return result;
@@ -282,6 +283,7 @@ make_hash_string :: inline ($$s : string) -> Hash_String
             defer initialized = 0xFFFFFFFF;
             init(*original_string_lock);
             with_exclusive_lock(*original_string_lock);
+            table_set(*hash_to_string_table, Hash_String.{}, string.{});
             if !#compile_time
             {
                 for 0..compile_time_hashes_and_strings_count-1
