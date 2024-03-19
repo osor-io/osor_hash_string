@@ -89,7 +89,7 @@ hash_table :: ()
     {
         amount_of_teslas_they_own := 0;
     }
-    table : Table(Hash_String, Friend, hash_to_32, compare_hash_strings);
+    table : Table(Hash_String, Friend, hash_string_to_u32, compare_hash_strings);
 
     ALICE  :: #run make_hash_string("Alice");
     BOB    :: #run make_hash_string("Bob");

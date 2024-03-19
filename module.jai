@@ -124,7 +124,7 @@ compare_hash_strings :: inline (a : Hash_String, b : Hash_String) -> bool { retu
 
 
 
-hash_to_32 :: inline (using s : Hash_String) -> u32 
+hash_string_to_u32 :: inline (using s : Hash_String) -> u32 
 { 
     #assert(type_of(hash) == u64);
     return (cast,trunc(u32)hash) ^ (cast,trunc(u32)(hash >> 32));
@@ -147,6 +147,13 @@ make_hash_string :: inline ($$s : string) -> Hash_String
     }
     return result;
 }
+
+
+
+hs :: make_hash_string;
+to_u32 :: hash_string_to_u32;
+hs32 :: ($$s : string) -> u32 { return hash_string_to_u32(make_hash_string(s)); }
+hs64 :: ($$s : string) -> u64 { return make_hash_string(s).hash; }
 
 
 
@@ -252,7 +259,7 @@ make_hash_string :: inline ($$s : string) -> Hash_String
 
     initialized : u32 = 0;
     original_string_lock : Lock_Type;
-    hash_to_string_table : Table(Hash_String, string, hash_to_32, compare_hash_strings);
+    hash_to_string_table : Table(Hash_String, string, hash_string_to_u32, compare_hash_strings);
     last_node : *String_Data_Node;
 
     #no_reset compile_time_string_data : [MAX_COMPILE_TIME_STRING_BYTES]u8;
