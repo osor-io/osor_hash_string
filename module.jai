@@ -173,11 +173,12 @@ hs64 :: ($$s : string) -> u64 { return make_hash_string(s).hash; }
 
 #if CUSTOM_HASH_STRING_PARSING
 {
-    #import "osor_parser";
+    #import "osor_tokenizer"; // https:/github.com/osor-io/osor_tokenizer
+    #import "osor_parser";    // https:/github.com/osor-io/osor_parser
     
     hash_string_parse :: (token : *Token, struct_info : *Type_Info_Struct, value_pointer : *void) -> parsed : bool, next_token : *Token, error : string
     {
-        if struct_info == type_info(Hash_String) && token.type == .String
+        if struct_info == type_info(Hash_String) && token.type == .STRING
         {
             hash_string := make_hash_string(token.text);
             assert(struct_info.runtime_size == size_of(type_of(hash_string)));
