@@ -46,7 +46,7 @@
 
                    USE_SHARED_EXCLUSIVE_LOCK := false,
                    //
-                   // Makes it so we use a Shared_Exclusive_Lock instead of a traditional mutex when accessing
+                   // Makes it so we use a form of shared/exclusive lock instead of a traditional mutex when accessing
                    // the original string data. This allows concurrent reads of original strings (and therefore
                    // they have less contention). If this is not set, it'll use the traditional Mutex that is
                    // available on the language's libraries. 
@@ -229,8 +229,12 @@ hs64 :: ($$s : string) -> u64 { return make_hash_string(s).hash; }
     #import "Compiler";
     #if USE_SHARED_EXCLUSIVE_LOCK
     {
-        #import "Shared_Exclusive_Lock";
-        Lock_Type :: Shared_Exclusive_Lock;
+        #import "osor_shared_exclusive_lock"; // https://gist.github.com/osor-io/fe7d5e74e324c0d26d1edab4c328677c
+        init :: (lock : *Spin_Shared_Exclusive_Lock)
+        {
+            lock.* = .{};
+        }
+        Lock_Type :: Spin_Shared_Exclusive_Lock;
         with_shared_lock :: (lock : *Lock_Type) #expand
         {
             lock_shared(lock);
