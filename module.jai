@@ -163,8 +163,8 @@ hs64 :: ($$s : string) -> u64 { return make_hash_string(s).hash; }
     {
         init_if_needed();
         with_shared_lock(*original_string_lock);
-        result, success := table_find(*hash_to_string_table, hash_string);
-        if success then return result, true;
+        found, saved_string := table_find_new(*hash_to_string_table, hash_string);
+        if found then return saved_string, true;
         return "<unavailable>", false;
     }
 }
@@ -320,7 +320,7 @@ hs64 :: ($$s : string) -> u64 { return make_hash_string(s).hash; }
 
         {
             with_shared_lock(*original_string_lock);
-            saved_string, found := table_find(*hash_to_string_table, hash_string);
+            found, saved_string := table_find_new(*hash_to_string_table, hash_string);
             if found then return; // @@TODO: Could check for duplicates here and below
         }
 
@@ -377,7 +377,7 @@ hs64 :: ($$s : string) -> u64 { return make_hash_string(s).hash; }
             }
         }
 
-        saved_string, found := table_find(*hash_to_string_table, hash_string);
+        found, saved_string := table_find_new(*hash_to_string_table, hash_string);
         if found then return; // @@TODO: Could check for duplicates here and above
 
         node := last_node;
